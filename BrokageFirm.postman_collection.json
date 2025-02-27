@@ -137,7 +137,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/orders/list?customerId=1&startDate=2024-01-01&endDate=2025-12-12",
+					"raw": "http://localhost:8080/orders/list/1/2024-01-01/2025-12-12",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -145,21 +145,10 @@
 					"port": "8080",
 					"path": [
 						"orders",
-						"list"
-					],
-					"query": [
-						{
-							"key": "customerId",
-							"value": "1"
-						},
-						{
-							"key": "startDate",
-							"value": "2024-01-01"
-						},
-						{
-							"key": "endDate",
-							"value": "2025-12-12"
-						}
+						"list",
+						"1",
+						"2024-01-01",
+						"2025-12-12"
 					]
 				}
 			},

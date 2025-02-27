@@ -20,8 +20,8 @@ public class OrderController {
         return orderService.createOrder(order);
     }
 
-    @GetMapping("/list")
-    public List<Order> listOrders(@RequestParam Long customerId, @RequestParam String startDate, @RequestParam String endDate) {
+    @GetMapping("/list/{customerId}/{startDate}/{endDate}")
+    public List<Order> listOrders(@PathVariable Long customerId, @PathVariable String startDate, @PathVariable String endDate) {
         return orderService.listOrders(customerId, startDate, endDate);
     }
 
