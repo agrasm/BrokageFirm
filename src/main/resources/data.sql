@@ -1,0 +1,9 @@
+INSERT INTO Asset VALUES (1, 100, 100,'TRY');
+INSERT INTO Asset VALUES (1, 10, 10,'ING');
+
+INSERT INTO Asset VALUES (2, 100, 100,'TRY');
+INSERT INTO Asset VALUES (2, 10, 10,'ING');
+
+INSERT INTO Customer VALUES (0,'admin','1234','ADMIN');
+INSERT INTO Customer VALUES (1,'customer1','1234', 'USER');
+INSERT INTO Customer VALUES (2,'customer2','1234', 'USER');

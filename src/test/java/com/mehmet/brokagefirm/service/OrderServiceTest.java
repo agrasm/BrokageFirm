@@ -1,0 +1,281 @@
+package com.mehmet.brokagefirm.service;
+
+import com.mehmet.brokagefirm.dto.OrderDTO;
+import com.mehmet.brokagefirm.entity.Asset;
+import com.mehmet.brokagefirm.entity.Customer;
+import com.mehmet.brokagefirm.entity.Order;
+import com.mehmet.brokagefirm.enums.OrderSide;
+import com.mehmet.brokagefirm.enums.OrderStatus;
+import com.mehmet.brokagefirm.handler.BrokageLogicException;
+import com.mehmet.brokagefirm.repository.CustomerRepository;
+import com.mehmet.brokagefirm.repository.OrderRepository;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.User;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@SpringBootTest
+class OrderServiceTest {
+    @Mock
+    private LoginService loginService;
+
+    @Mock
+    private AssetService assetService;
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private CustomerRepository customerRepository;
+
+    @InjectMocks
+    private OrderService orderService;
+
+    private OrderDTO order;
+
+    private OrderDTO orderTry;
+
+    private Order savedOrder;
+
+    private Asset asset;
+
+    private Asset assetZero;
+
+    private Asset assetTry;
+
+    private Asset assetTryZero;
+
+    private User adminUser;
+
+    private User standardUser;
+
+    private Customer customer;
+
+    private void initialize(String side) {
+        order = new OrderDTO();
+        order.setCustomerId(1L);
+        order.setAssetName("ING");
+        order.setOrderSide(side);
+        order.setSize(10L);
+        order.setPrice(1L);
+
+        orderTry = new OrderDTO();
+        orderTry.setCustomerId(1L);
+        orderTry.setAssetName("TRY");
+        orderTry.setOrderSide(side);
+        orderTry.setSize(10L);
+        orderTry.setPrice(1L);
+
+        savedOrder = new Order();
+        savedOrder.setCustomerId(1L);
+        savedOrder.setAssetName("ING");
+        savedOrder.setOrderSide("BUY");
+        savedOrder.setSize(10L);
+        savedOrder.setPrice(1L);
+        savedOrder.setStatus(OrderStatus.PENDING.name());
+
+        asset = new Asset();
+        asset.setAssetName("ING");
+        asset.setSize(100L);
+        asset.setUsableSize(100L);
+        asset.setCustomerId(1L);
+
+        assetTry = new Asset();
+        assetTry.setAssetName("TRY");
+        assetTry.setSize(100L);
+        assetTry.setUsableSize(100L);
+        assetTry.setCustomerId(1L);
+
+        assetZero = new Asset();
+        assetZero.setAssetName("ING");
+        assetZero.setSize(0L);
+        assetZero.setUsableSize(0L);
+        assetZero.setCustomerId(1L);
+
+        assetTryZero = new Asset();
+        assetTryZero.setAssetName("TRY");
+        assetTryZero.setSize(0L);
+        assetTryZero.setUsableSize(0L);
+        assetTryZero.setCustomerId(1L);
+
+        customer = new Customer();
+        customer.setId(2L);
+        customer.setName("customer2");
+        customer.setPassword("1234");
+        customer.setRole("USER");
+
+
+        adminUser = (User) User.withDefaultPasswordEncoder()
+                .username("admin")
+                .password("1234")
+                .roles("ADMIN")
+                .build();
+
+        standardUser = (User) User.withDefaultPasswordEncoder()
+                .username("customer1")
+                .password("1234")
+                .roles("USER")
+                .build();
+    }
+
+    @Test
+    void testListOrders() {
+        initialize(OrderSide.BUY.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.findByCustomerIdAndCreateDateBetween(any(), any(), any())).thenReturn(List.of(savedOrder));
+        List<Order> orders = orderService.listOrders(1L, "2024-01-01", "2025-12-12");
+        Assertions.assertNotNull(orders);
+        Assertions.assertEquals(1L, orders.get(0).getCustomerId());
+    }
+
+    @Test
+    void testListOrdersThrowsExceptionWhenDateFormatIsIncorrect() {
+        initialize(OrderSide.BUY.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.findByCustomerIdAndCreateDateBetween(any(), any(), any())).thenReturn(List.of(savedOrder));
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.listOrders(1L, "20240101", "20251212"));
+
+        Assertions.assertNotNull(exception.getMessage().equals("Incorrect date format, correct format is: yyyy-MM-dd"));
+    }
+
+
+    @Test
+    void testCreateOrderForBuy() {
+        initialize(OrderSide.BUY.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Order createdOrder = orderService.createOrder(order);
+        Assertions.assertNotNull(createdOrder);
+        Assertions.assertEquals(OrderStatus.PENDING.name(), createdOrder.getStatus());
+    }
+
+    @Test
+    void testCreateOrderForSell() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Order createdOrder = orderService.createOrder(order);
+        Assertions.assertNotNull(createdOrder);
+        Assertions.assertEquals(OrderStatus.PENDING.name(), createdOrder.getStatus());
+    }
+
+    @Test
+    void testCreateOrderIsNotAllowedForDifferentCustomerIfRoleIsNotAdmin() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn("USER");
+        Mockito.when(loginService.getCurrentUser()).thenReturn(standardUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(customerRepository.findCustomerByName(any())).thenReturn(customer);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
+
+        Assertions.assertNotNull(exception.getMessage().equals("User can create order for itself only"));
+
+    }
+
+    @Test
+    void testCreateOrderIsNotAllowedForTryAsset() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(assetTry);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> {
+            orderService.createOrder(orderTry);
+        });
+
+        Assertions.assertNotNull(exception.getMessage().equals("TRY is not allowed"));
+
+    }
+
+    @Test
+    void testCreateOrderIfOrderTypeIsIncorrect() {
+        initialize("WRONG_SIDE");
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
+
+        Assertions.assertNotNull(exception.getMessage().equals("Incorrect Order Type"));
+
+    }
+
+    @Test
+    void testCreateOrderBuyForNotEnoughTry() {
+        initialize(OrderSide.BUY.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(assetTryZero);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
+
+        Assertions.assertNotNull(exception.getMessage().equals("Not enough TRY for this order"));
+
+    }
+
+    @Test
+    void testCreateOrderSellNotEnoughAsset() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(assetZero);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
+
+        Assertions.assertNotNull(exception.getMessage().equals("Not enough usable size for this order"));
+
+    }
+
+    @Test
+    void testDeleteOrder() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.findById(any())).thenReturn(Optional.of(savedOrder));
+        Order deletedOrder = orderService.deleteOrder(1L);
+        Assertions.assertNotNull(deletedOrder);
+        Assertions.assertEquals(OrderStatus.CANCELED.name(), deletedOrder.getStatus());
+    }
+
+    @Test
+    void testMatchOrderForBuy() {
+        initialize(OrderSide.BUY.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.findById(any())).thenReturn(Optional.of(savedOrder));
+        Order matchOrder = orderService.match(1L);
+        Assertions.assertNotNull(matchOrder);
+        Assertions.assertEquals(OrderStatus.MATCHED.name(), matchOrder.getStatus());
+    }
+
+    @Test
+    void testMatchOrderForSell() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(asset);
+        when(orderRepository.findById(any())).thenReturn(Optional.of(savedOrder));
+        Order matchOrder = orderService.match(1L);
+        Assertions.assertNotNull(matchOrder);
+        Assertions.assertEquals(OrderStatus.MATCHED.name(), matchOrder.getStatus());
+    }
+}
