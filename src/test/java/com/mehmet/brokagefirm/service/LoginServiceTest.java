@@ -10,7 +10,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -31,8 +30,6 @@ class LoginServiceTest {
 
     private Customer customer;
 
-    private User user;
-
     private void initialize() {
         loginDTO = new LoginDTO();
         loginDTO.setName("admin");
@@ -42,12 +39,6 @@ class LoginServiceTest {
         customer.setName("admin");
         customer.setPassword("1234");
         customer.setRole("ADMIN");
-
-        user = (User) User.withDefaultPasswordEncoder()
-                .username("admin")
-                .password("1234")
-                .roles("ADMIN")
-                .build();
     }
 
     @Test
@@ -67,7 +58,7 @@ class LoginServiceTest {
         when(customerRepository.findCustomerByNameAndPassword(any(), any())).thenReturn(null);
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> loginService.checkCredentials(loginDTO));
 
-        Assertions.assertNotNull(exception.getMessage().equals("Invalid auth parameters"));
+        Assertions.assertEquals("Invalid auth parameters", exception.getMessage());
 
     }
 }

@@ -148,7 +148,7 @@ class OrderServiceTest {
         when(orderRepository.findByCustomerIdAndCreateDateBetween(any(), any(), any())).thenReturn(List.of(savedOrder));
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.listOrders(1L, "20240101", "20251212"));
 
-        Assertions.assertNotNull(exception.getMessage().equals("Incorrect date format, correct format is: yyyy-MM-dd"));
+        Assertions.assertEquals("Incorrect date format, correct format is: yyyy-MM-dd", exception.getMessage());
     }
 
 
@@ -185,7 +185,7 @@ class OrderServiceTest {
         when(customerRepository.findCustomerByName(any())).thenReturn(customer);
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
 
-        Assertions.assertNotNull(exception.getMessage().equals("User can create order for itself only"));
+        Assertions.assertEquals("User can create order for itself only",exception.getMessage());
 
     }
 
@@ -196,11 +196,9 @@ class OrderServiceTest {
         Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
         when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(assetTry);
         when(orderRepository.save(any())).thenReturn(savedOrder);
-        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> {
-            orderService.createOrder(orderTry);
-        });
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(orderTry));
 
-        Assertions.assertNotNull(exception.getMessage().equals("TRY is not allowed"));
+        Assertions.assertEquals("TRY is not allowed", exception.getMessage());
 
     }
 
@@ -213,7 +211,7 @@ class OrderServiceTest {
         when(orderRepository.save(any())).thenReturn(savedOrder);
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
 
-        Assertions.assertNotNull(exception.getMessage().equals("Incorrect Order Type"));
+        Assertions.assertEquals("Incorrect Order Type",exception.getMessage());
 
     }
 
@@ -226,7 +224,7 @@ class OrderServiceTest {
         when(orderRepository.save(any())).thenReturn(savedOrder);
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
 
-        Assertions.assertNotNull(exception.getMessage().equals("Not enough TRY for this order"));
+        Assertions.assertEquals("Not enough TRY for this order", exception.getMessage());
 
     }
 
@@ -239,7 +237,20 @@ class OrderServiceTest {
         when(orderRepository.save(any())).thenReturn(savedOrder);
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
 
-        Assertions.assertNotNull(exception.getMessage().equals("Not enough usable size for this order"));
+        Assertions.assertEquals("Not enough usable size for this order", exception.getMessage());
+
+    }
+
+    @Test
+    void testCreateOrderSellAssetDoesNotExist() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(null);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
+
+        Assertions.assertEquals("Asset does not exist", exception.getMessage());
 
     }
 
