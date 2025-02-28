@@ -2,6 +2,8 @@ Hello There!
 
 Please use JDK 17.0.12 OR above
 
+Run git clone https://github.com/agrasm/BrokageFirm to clone project.
+
 Run mvn clean install to build the project.
 
 Run mvn spring-boot:run to start the application.
