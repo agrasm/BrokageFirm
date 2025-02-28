@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -37,7 +36,7 @@ public class LoginService {
             inMemoryUserDetailsManager.createUser(user);
             return AUTHENTICATE;
         } else {
-            log.error("Attempted to login with invalid credentials: ", login.getName());
+            log.error("Attempted to login with invalid credentials: {}", login.getName());
             throw new BrokageLogicException("Invalid auth parameters");
         }
     }
@@ -49,7 +48,7 @@ public class LoginService {
     }
 
     public String getCurrentUserRole() {
-        List<GrantedAuthority> currentUserAuths = getCurrentUser().getAuthorities().stream().collect(Collectors.toList());
+        List<GrantedAuthority> currentUserAuths = getCurrentUser().getAuthorities().stream().toList();
         return currentUserAuths.get(0).toString();
     }
 }

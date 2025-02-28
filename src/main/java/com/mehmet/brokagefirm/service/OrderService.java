@@ -43,7 +43,7 @@ public class OrderService {
         } else if (OrderSide.SELL.name().equals(orderRequested.getOrderSide())) {
             return sellOrder(orderRequested);
         } else {
-            log.error("Incorrect Order Type: ", orderRequested.getOrderSide());
+            log.error("Incorrect Order Type: {}", orderRequested.getOrderSide());
             throw new BrokageLogicException("Incorrect Order Type");
         }
     }
@@ -65,7 +65,7 @@ public class OrderService {
         Long orderTotalPrice = orderRequested.getPrice() * orderRequested.getSize();
         Asset tryAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), TRY);
         if (tryAsset.getUsableSize() < orderTotalPrice) {
-            log.error("Not enough TRY for this order: ", orderTotalPrice);
+            log.error("Not enough TRY for this order: {}", orderTotalPrice);
             throw new BrokageLogicException("Not enough TRY for this order");
         } else {
             tryAsset.setUsableSize(tryAsset.getUsableSize() - orderTotalPrice);
@@ -77,11 +77,11 @@ public class OrderService {
     private Order sellOrder(OrderDTO orderRequested) {
         Asset currentAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), orderRequested.getAssetName());
         if (ObjectUtils.isEmpty(currentAsset)) {
-            log.error("Asset does not exist: ", orderRequested.getAssetName());
+            log.error("Asset does not exist: {}", orderRequested.getAssetName());
             throw new BrokageLogicException("Asset does not exist");
         }
         if (currentAsset.getUsableSize() < orderRequested.getSize()) {
-            log.error("Not enough usable size for this order: ", orderRequested.getSize());
+            log.error("Not enough usable size for this order: {}", orderRequested.getSize());
             throw new BrokageLogicException("Not enough usable size for this order");
         } else {
             currentAsset.setUsableSize(currentAsset.getUsableSize() - orderRequested.getSize());
@@ -102,7 +102,7 @@ public class OrderService {
             startTime = LocalDate.parse(startDate, formatter).atStartOfDay();
             endTime = LocalDate.parse(endDate, formatter).atStartOfDay();
         } catch (Exception e) {
-            log.error("Incorrect date format: ", e.getMessage());
+            log.error("Incorrect date format: {}", e.getMessage());
             throw new BrokageLogicException("Incorrect date format, correct format is: yyyy-MM-dd");
         }
         return orderRepository.findByCustomerIdAndCreateDateBetween(customerId, startTime, endTime);
