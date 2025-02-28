@@ -10,6 +10,7 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.User;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
@@ -36,20 +37,20 @@ class AssetServiceTest {
     private void initialize() {
         assetTry = new Asset();
         assetTry.setAssetName("TRY");
-        assetTry.setSize(100L);
-        assetTry.setUsableSize(100L);
+        assetTry.setSize(BigDecimal.valueOf(100));
+        assetTry.setUsableSize(BigDecimal.valueOf(100));
         assetTry.setCustomerId(1L);
 
         asset = new Asset();
         asset.setAssetName("ING");
-        asset.setSize(100L);
-        asset.setUsableSize(100L);
+        asset.setSize(BigDecimal.valueOf(100));
+        asset.setUsableSize(BigDecimal.valueOf(100));
         asset.setCustomerId(1L);
 
         assetDifferentCustomer = new Asset();
         assetDifferentCustomer.setAssetName("ING");
-        assetDifferentCustomer.setSize(100L);
-        assetDifferentCustomer.setUsableSize(100L);
+        assetDifferentCustomer.setSize(BigDecimal.valueOf(100));
+        assetDifferentCustomer.setUsableSize(BigDecimal.valueOf(100));
         assetDifferentCustomer.setCustomerId(2L);
 
 

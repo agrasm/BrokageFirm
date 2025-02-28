@@ -5,6 +5,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Entity
 
@@ -15,6 +17,6 @@ public class Asset {
     @Id
     private String assetName;
 
-    private Long size;
-    private Long usableSize;
+    private BigDecimal size;
+    private BigDecimal usableSize;
 }

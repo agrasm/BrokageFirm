@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,8 +18,8 @@ public class Order {
     private Long customerId;
     private String assetName;
     private String orderSide;
-    private Long size;
-    private Long price;
+    private BigDecimal size;
+    private BigDecimal price;
     private String status;
     private LocalDateTime createDate;
 }

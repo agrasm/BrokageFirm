@@ -17,6 +17,7 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.User;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,60 +70,60 @@ class OrderServiceTest {
         order.setCustomerId(1L);
         order.setAssetName("ING");
         order.setOrderSide(side);
-        order.setSize(10L);
-        order.setPrice(1L);
+        order.setSize(BigDecimal.TEN);
+        order.setPrice(BigDecimal.ONE);
 
         orderZeroSize = new OrderDTO();
         orderZeroSize.setCustomerId(1L);
         orderZeroSize.setAssetName("ING");
         orderZeroSize.setOrderSide(side);
-        orderZeroSize.setSize(0L);
-        orderZeroSize.setPrice(1L);
+        orderZeroSize.setSize(BigDecimal.ZERO);
+        orderZeroSize.setPrice(BigDecimal.ONE);
 
         orderZeroPrice = new OrderDTO();
         orderZeroPrice.setCustomerId(1L);
         orderZeroPrice.setAssetName("ING");
         orderZeroPrice.setOrderSide(side);
-        orderZeroPrice.setSize(10L);
-        orderZeroPrice.setPrice(0L);
+        orderZeroPrice.setSize(BigDecimal.TEN);
+        orderZeroPrice.setPrice(BigDecimal.ZERO);
 
         orderTry = new OrderDTO();
         orderTry.setCustomerId(1L);
         orderTry.setAssetName("TRY");
         orderTry.setOrderSide(side);
-        orderTry.setSize(10L);
-        orderTry.setPrice(1L);
+        orderTry.setSize(BigDecimal.TEN);
+        orderTry.setPrice(BigDecimal.ONE);
 
         savedOrder = new Order();
         savedOrder.setCustomerId(1L);
         savedOrder.setAssetName("ING");
         savedOrder.setOrderSide("BUY");
-        savedOrder.setSize(10L);
-        savedOrder.setPrice(1L);
+        savedOrder.setSize(BigDecimal.TEN);
+        savedOrder.setPrice(BigDecimal.ONE);
         savedOrder.setStatus(OrderStatus.PENDING.name());
 
         asset = new Asset();
         asset.setAssetName("ING");
-        asset.setSize(100L);
-        asset.setUsableSize(100L);
+        asset.setSize(BigDecimal.valueOf(100));
+        asset.setUsableSize(BigDecimal.valueOf(100));
         asset.setCustomerId(1L);
 
         assetTry = new Asset();
         assetTry.setAssetName("TRY");
-        assetTry.setSize(100L);
-        assetTry.setUsableSize(100L);
+        assetTry.setSize(BigDecimal.valueOf(100));
+        assetTry.setUsableSize(BigDecimal.valueOf(100));
         assetTry.setCustomerId(1L);
 
         assetZero = new Asset();
         assetZero.setAssetName("ING");
-        assetZero.setSize(0L);
-        assetZero.setUsableSize(0L);
+        assetZero.setSize(BigDecimal.ZERO);
+        assetZero.setUsableSize(BigDecimal.ZERO);
         assetZero.setCustomerId(1L);
 
         assetTryZero = new Asset();
         assetTryZero.setAssetName("TRY");
-        assetTryZero.setSize(0L);
-        assetTryZero.setUsableSize(0L);
+        assetTryZero.setSize(BigDecimal.ZERO);
+        assetTryZero.setUsableSize(BigDecimal.ZERO);
         assetTryZero.setCustomerId(1L);
 
         customer = new Customer();

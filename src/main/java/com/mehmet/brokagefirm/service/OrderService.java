@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,12 +36,15 @@ public class OrderService {
         if (!LoginService.ADMIN.equals(loginService.getCurrentUserRole()) && !orderRequested.getCustomerId().equals(customerRepository.findCustomerByName(loginService.getCurrentUser().getUsername()).getId())) {
             throw new BrokageLogicException("User can create order for itself only");
         }
-        if(orderRequested.getSize()<1 || orderRequested.getPrice()<1){
+        if (BigDecimal.ZERO.compareTo(orderRequested.getSize()) >= 0 || BigDecimal.ZERO.compareTo(orderRequested.getPrice()) >= 0) {
             throw new BrokageLogicException("Incorrect order size or price");
         }
         if (TRY.equals(orderRequested.getAssetName())) {
             throw new BrokageLogicException("TRY is not allowed");
         }
+        orderRequested.setSize(orderRequested.getSize().setScale(2, RoundingMode.HALF_UP));
+        orderRequested.setPrice(orderRequested.getPrice().setScale(2, RoundingMode.HALF_UP));
+
         if (OrderSide.BUY.name().equals(orderRequested.getOrderSide())) {
             return buyOrder(orderRequested);
         } else if (OrderSide.SELL.name().equals(orderRequested.getOrderSide())) {
@@ -64,13 +69,13 @@ public class OrderService {
     }
 
     private Order buyOrder(OrderDTO orderRequested) {
-        Long orderTotalPrice = orderRequested.getPrice() * orderRequested.getSize();
+        BigDecimal orderTotalPrice = orderRequested.getPrice().multiply(orderRequested.getSize());
         Asset tryAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), TRY);
-        if (tryAsset.getUsableSize() < orderTotalPrice) {
+        if (tryAsset.getUsableSize().compareTo(orderTotalPrice) < 0) {
             log.error("Not enough TRY for this order: {}", orderTotalPrice);
             throw new BrokageLogicException("Not enough TRY for this order");
         } else {
-            tryAsset.setUsableSize(tryAsset.getUsableSize() - orderTotalPrice);
+            tryAsset.setUsableSize(tryAsset.getUsableSize().subtract(orderTotalPrice));
             assetService.updateAsset(tryAsset);
             return prepareOrder(orderRequested);
         }
@@ -82,11 +87,11 @@ public class OrderService {
             log.error("Asset does not exist: {}", orderRequested.getAssetName());
             throw new BrokageLogicException("Asset does not exist");
         }
-        if (currentAsset.getUsableSize() < orderRequested.getSize()) {
+        if (currentAsset.getUsableSize().compareTo(orderRequested.getSize()) < 0) {
             log.error("Not enough usable size for this order: {}", orderRequested.getSize());
             throw new BrokageLogicException("Not enough usable size for this order");
         } else {
-            currentAsset.setUsableSize(currentAsset.getUsableSize() - orderRequested.getSize());
+            currentAsset.setUsableSize(currentAsset.getUsableSize().subtract(orderRequested.getSize()));
             assetService.updateAsset(currentAsset);
             return prepareOrder(orderRequested);
         }
@@ -129,16 +134,16 @@ public class OrderService {
     }
 
     private void cancelBuyOrder(Order orderRequested) {
-        Long orderTotalPrice = orderRequested.getPrice() * orderRequested.getSize();
+        BigDecimal orderTotalPrice = orderRequested.getPrice().multiply(orderRequested.getSize());
         Asset tryAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), TRY);
-        tryAsset.setUsableSize(tryAsset.getUsableSize() + orderTotalPrice);
+        tryAsset.setUsableSize(tryAsset.getUsableSize().add(orderTotalPrice));
         assetService.updateAsset(tryAsset);
 
     }
 
     private void cancelSellOrder(Order orderRequested) {
         Asset currentAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), orderRequested.getAssetName());
-        currentAsset.setUsableSize(currentAsset.getUsableSize() + orderRequested.getSize());
+        currentAsset.setUsableSize(currentAsset.getUsableSize().add(orderRequested.getSize()));
         assetService.updateAsset(currentAsset);
     }
 
@@ -161,9 +166,9 @@ public class OrderService {
     }
 
     private void matchBuyOrder(Order orderRequested) {
-        Long orderTotalPrice = orderRequested.getPrice() * orderRequested.getSize();
+        BigDecimal orderTotalPrice = orderRequested.getPrice().multiply(orderRequested.getSize());
         Asset tryAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), TRY);
-        tryAsset.setSize(tryAsset.getSize() - orderTotalPrice);
+        tryAsset.setSize(tryAsset.getSize().subtract(orderTotalPrice));
         assetService.updateAsset(tryAsset);
         Asset currentAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), orderRequested.getAssetName());
         if (ObjectUtils.isEmpty(currentAsset)) {
@@ -174,21 +179,21 @@ public class OrderService {
             newAsset.setUsableSize(orderRequested.getSize());
             assetService.updateAsset(newAsset);
         } else {
-            currentAsset.setSize(currentAsset.getSize() + orderRequested.getSize());
-            currentAsset.setUsableSize(currentAsset.getUsableSize() + orderRequested.getSize());
+            currentAsset.setSize(currentAsset.getSize().add(orderRequested.getSize()));
+            currentAsset.setUsableSize(currentAsset.getUsableSize().add(orderRequested.getSize()));
             assetService.updateAsset(currentAsset);
         }
 
     }
 
     private void matchSellOrder(Order orderRequested) {
-        Long orderTotalPrice = orderRequested.getPrice() * orderRequested.getSize();
+        BigDecimal orderTotalPrice = orderRequested.getPrice().multiply(orderRequested.getSize());
         Asset currentAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), orderRequested.getAssetName());
-        currentAsset.setSize(currentAsset.getSize() - orderRequested.getSize());
+        currentAsset.setSize(currentAsset.getSize().subtract(orderRequested.getSize()));
         assetService.updateAsset(currentAsset);
         Asset tryAsset = assetService.findByCustomerIdAndAssetName(orderRequested.getCustomerId(), TRY);
-        tryAsset.setUsableSize(tryAsset.getUsableSize() + orderTotalPrice);
-        tryAsset.setSize(tryAsset.getSize() + orderTotalPrice);
+        tryAsset.setUsableSize(tryAsset.getUsableSize().add(orderTotalPrice));
+        tryAsset.setSize(tryAsset.getSize().add(orderTotalPrice));
     }
 
 
