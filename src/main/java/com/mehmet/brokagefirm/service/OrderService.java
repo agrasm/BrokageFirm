@@ -34,7 +34,9 @@ public class OrderService {
         if (!LoginService.ADMIN.equals(loginService.getCurrentUserRole()) && !orderRequested.getCustomerId().equals(customerRepository.findCustomerByName(loginService.getCurrentUser().getUsername()).getId())) {
             throw new BrokageLogicException("User can create order for itself only");
         }
-
+        if(orderRequested.getSize()<1 || orderRequested.getPrice()<1){
+            throw new BrokageLogicException("Incorrect order size or price");
+        }
         if (TRY.equals(orderRequested.getAssetName())) {
             throw new BrokageLogicException("TRY is not allowed");
         }

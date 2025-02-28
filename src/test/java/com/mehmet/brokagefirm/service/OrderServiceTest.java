@@ -44,6 +44,10 @@ class OrderServiceTest {
 
     private OrderDTO orderTry;
 
+    private OrderDTO orderZeroSize;
+
+    private OrderDTO orderZeroPrice;
+
     private Order savedOrder;
 
     private Asset asset;
@@ -67,6 +71,20 @@ class OrderServiceTest {
         order.setOrderSide(side);
         order.setSize(10L);
         order.setPrice(1L);
+
+        orderZeroSize = new OrderDTO();
+        orderZeroSize.setCustomerId(1L);
+        orderZeroSize.setAssetName("ING");
+        orderZeroSize.setOrderSide(side);
+        orderZeroSize.setSize(0L);
+        orderZeroSize.setPrice(1L);
+
+        orderZeroPrice = new OrderDTO();
+        orderZeroPrice.setCustomerId(1L);
+        orderZeroPrice.setAssetName("ING");
+        orderZeroPrice.setOrderSide(side);
+        orderZeroPrice.setSize(10L);
+        orderZeroPrice.setPrice(0L);
 
         orderTry = new OrderDTO();
         orderTry.setCustomerId(1L);
@@ -185,7 +203,7 @@ class OrderServiceTest {
         when(customerRepository.findCustomerByName(any())).thenReturn(customer);
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
 
-        Assertions.assertEquals("User can create order for itself only",exception.getMessage());
+        Assertions.assertEquals("User can create order for itself only", exception.getMessage());
 
     }
 
@@ -203,6 +221,32 @@ class OrderServiceTest {
     }
 
     @Test
+    void testCreateOrderIsNotAllowedForZeroSize() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(assetTry);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(orderZeroSize));
+
+        Assertions.assertEquals("Incorrect order size or price", exception.getMessage());
+
+    }
+
+    @Test
+    void testCreateOrderIsNotAllowedForZeroPrice() {
+        initialize(OrderSide.SELL.name());
+        Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
+        Mockito.when(loginService.getCurrentUser()).thenReturn(adminUser);
+        when(assetService.findByCustomerIdAndAssetName(any(), any())).thenReturn(assetTry);
+        when(orderRepository.save(any())).thenReturn(savedOrder);
+        Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(orderZeroPrice));
+
+        Assertions.assertEquals("Incorrect order size or price", exception.getMessage());
+
+    }
+
+    @Test
     void testCreateOrderIfOrderTypeIsIncorrect() {
         initialize("WRONG_SIDE");
         Mockito.when(loginService.getCurrentUserRole()).thenReturn(LoginService.ADMIN);
@@ -211,7 +255,7 @@ class OrderServiceTest {
         when(orderRepository.save(any())).thenReturn(savedOrder);
         Exception exception = Assertions.assertThrows(BrokageLogicException.class, () -> orderService.createOrder(order));
 
-        Assertions.assertEquals("Incorrect Order Type",exception.getMessage());
+        Assertions.assertEquals("Incorrect Order Type", exception.getMessage());
 
     }
 
