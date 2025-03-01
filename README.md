@@ -12,4 +12,6 @@ Use tools like Postman to test the endpoints.
 
 You can import BrokageFirm.postman_collection.json collection to your postman if you prefer.
 
-A separate postman screenshot documentation can be found at this directory.
+manual_test_postman.pdf documentation can be found at this directory for test steps.
+
+Thanks!
